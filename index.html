@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-GUARD | Hệ thống bảo vệ điện năng</title>
+    <style>
+        :root {
+            /* Tone nền XANH LÁ HẮC ÁM (Dark Emerald) */
+            --bg-main: #021a12;      /* Nền xanh đen sâu thẳm */
+            --bg-panel: #062b1d;     /* Nền các khối card xanh hơn tí */
+            --border-color: #0f4d35; /* Viền xanh ngọc */
+            
+            /* Màu chủ đạo E-GUARD: Xanh Neon bật tone */
+            --accent-green: #00ff77; 
+            --text-main: #d1fae5;    /* Chữ trắng ám xanh lá */
+            --text-muted: #6ee7b7;   /* Chữ xám xanh */
+            --text-blue: #38bdf8;
+            --text-red: #ff5c5c;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px 40px;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Nút Quay lại góc trái */
+        .top-bar {
+            margin-bottom: 20px;
+        }
+        .btn-back {
+            background: #06402b;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .btn-back:hover { background: #085a3c; }
+
+        /* Bố cục chính */
+        .dashboard {
+            display: flex;
+            gap: 25px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* ---------------- CỘT TRÁI (KHUNG MÔ PHỎNG) ---------------- */
+        .main-view {
+            flex: 1;
+            background: #01140e; /* Đen xanh siêu thẫm */
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0, 255, 119, 0.05); /* Hiệu ứng hắt sáng xanh bên trong */
+        }
+
+        /* Cụm nút trên góc phải của khung mô phỏng */
+        .view-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        .btn-control {
+            background: #06402b;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-control-primary {
+            background: var(--text-blue);
+            color: #000;
+            border: none;
+            font-weight: 600;
+        }
+
+        /* Vùng lưới 3D hiển thị mạch (Chuyển sang lưới xanh lá ảo ma) */
+        .viewport {
+            flex: 1;
+            background-image: 
+                linear-gradient(#053020 1px, transparent 1px),
+                linear-gradient(90deg, #053020 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .viewport img {
+            max-width: 85%;
+            max-height: 85%;
+            filter: drop-shadow(0 0 25px rgba(0, 255, 119, 0.3)); /* Tỏa hào quang xanh */
+        }
+
+        /* ---------------- CỘT PHẢI (THÔNG SỐ) ---------------- */
+        .sidebar {
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent-green);
+        }
+
+        /* CSS cho các dòng thông số */
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0, 255, 119, 0.1); /* Dòng kẻ xanh mờ */
+            font-size: 13px;
+        }
+        .data-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .data-label { color: var(--text-muted); }
+        .data-value { color: var(--text-main); text-align: right; font-weight: 500;}
+        
+        .val-blue { color: var(--text-blue); }
+        
+        /* Cụm thông số nổi bật (Giống phần "9 bóng" màu đỏ) */
+        .highlight-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0, 255, 119, 0.1);
+        }
+        .highlight-value {
+            color: var(--text-red);
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 92, 92, 0.3); /* Bóng đổ cho số đỏ */
+        }
+
+        /* Cụm tùy chỉnh (Giống phần "Màu sàn", "Màu tường") */
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        .setting-row:last-child { margin-bottom: 0; }
+        .setting-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+        }
+        .color-box {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+        .setting-value {
+            background: #01140e;
+            border: 1px solid var(--border-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            color: var(--text-main);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <button class="btn-back">← Quay lại E-GUARD</button>
+    </div>
+
+    <div class="dashboard">
+        <!-- CỘT TRÁI: KHUNG MÔ PHỎNG -->
+        <div class="main-view">
+            <div class="view-controls">
+                <button class="btn-control">🖱️ Kéo để xoay</button>
+                <button class="btn-control btn-control-primary">🔌 Trạm đo 1</button>
+            </div>
+            
+            <div class="viewport">
+                <!-- <img src="assets/mach_that.png" alt="E-GUARD Board"> -->
+                <div style="color: var(--accent-green); text-align: center; font-weight: bold;">
+                    [Chèn ảnh mạch vào đây]<br>
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: normal;">Xóa thẻ &lt;div&gt; này và bỏ comment thẻ &lt;img&gt;</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI: THÔNG SỐ -->
+        <div class="sidebar">
+            
+            <!-- BẢNG 1: KẾT QUẢ ĐO LƯỜNG -->
+            <div class="card">
+                <div class="card-header">📊 Giám Sát Điện Năng E-GUARD</div>
+                
+                <div class="data-row">
+                    <span class="data-label">Tiêu chuẩn</span>
+                    <span class="data-value val-blue">TCVN 185V - 245V</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Điện áp đo được</span>
+                    <span class="data-value val-blue">220.5 V</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Dòng điện</span>
+                    <span class="data-value val-blue">4.20 A</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Trạng thái lưới</span>
+                    <span class="data-value" style="color: var(--accent-green); font-weight: bold;">Ổn định</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Loại tải</span>
+                    <span class="data-value val-blue">Thiết bị dân dụng</span>
+                </div>
+                
+                <!-- Dòng công suất lớn -->
+                <div class="highlight-row">
+                    <span class="data-label">Tổng công suất</span>
+                    <span class="highlight-value">926 W</span>
+                </div>
+                
+                <div class="data-row" style="border-top: none; padding-top: 5px;">
+                    <span class="data-label">Tổng điện năng</span>
+                    <span class="data-value val-blue">1.5 kWh</span>
+                </div>
+            </div>
+
+            <!-- BẢNG 2: TÙY CHỈNH -->
+            <div class="card">
+                <div class="card-header">⚙️ Cài Đặt Trạng Thái</div>
+                
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <div class="color-box" style="background-color: var(--accent-green); box-shadow: 0 0 8px var(--accent-green);"></div>
+                        Contactor Chính
+                    </div>
+                    <div class="setting-value" style="color: var(--accent-green);">Đang Đóng</div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <div class="color-box" style="background-color: #ff5c5c;"></div>
+                        Còi Cảnh Báo (Buzzer)
+                    </div>
+                    <div class="setting-value">Tắt</div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <div class="color-box" style="background-color: #d1fae5;"></div>
+                        Chế độ Bảo vệ Auto
+                    </div>
+                    <div class="setting-value">Bật</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
